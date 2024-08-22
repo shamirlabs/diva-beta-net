@@ -1,0 +1,24 @@
+# data files
+data
+
+# misc
+.DS_Store
+
+# local env files
+.env*.local
+
+# template
+.env
+.env.bak
+.env.old
+
+# folders
+/diva_backup
+/grafana
+/prometheus
+/beacon
+/execution
+/.diva
+
+# IDEs
+.idea

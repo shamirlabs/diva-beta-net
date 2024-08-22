@@ -1,0 +1,11 @@
+[sources.diva_logs]
+  type = "docker_logs"
+  include_containers = ["diva"]
+
+[sinks.loki]
+  type = "loki"
+  inputs = ["diva_logs"]
+  endpoint = "https://919664:glc_eyJvIjoiMTE1MjYwOCIsIm4iOiJzdGFjay05NjE4ODQtaW50ZWdyYXRpb24taG9sZXNreS10ZXN0ZXIiLCJrIjoibzJ5QzUyZnNaTlNtVTg2ODExWk05djl5IiwibSI6eyJyIjoicHJvZC1ldS13ZXN0LTIifX0=@logs-prod-012.grafana.net"
+  
+  labels = {app="diva", job = "${USERNAME}"}
+  encoding.codec = "json"

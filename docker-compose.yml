@@ -1,0 +1,162 @@
+services:
+
+  diva:
+    image: diva/diva:v24.8.0
+    platform: linux/amd64
+    container_name: diva
+    hostname: diva
+    restart: unless-stopped
+    command:
+      - '--db=/var/diva/config/diva.db'
+      - '--w3s-address=0.0.0.0'
+      - '--log-level=info'
+      - '--swagger-ui-enabled'
+      - '--master-key=${DIVA_API_KEY}'
+      - '--execution-client-url=${EXECUTION_CLIENT_URL}'
+      - '--consensus-client-url=${CONSENSUS_CLIENT_URL}'
+      - '--chain=holesky'
+    environment:
+      - DIVA_VAULT_PASSWORD=${DIVA_VAULT_PASSWORD}
+    volumes:
+      - ./.diva/:/var/diva/
+    ports:
+      - "5050:5050"
+      - "30000:30000"
+    depends_on:
+      beacon:
+        condition: service_healthy
+
+  validator:
+    image: statusim/nimbus-validator-client:multiarch-v24.7.0
+    platform: linux/amd64
+    container_name: validator
+    hostname: validator
+    restart: unless-stopped
+    command:
+      [
+        "--doppelganger-detection=false",
+        "--non-interactive",
+        "--web3-signer-update-interval=120",
+        "--beacon-node=${CONSENSUS_CLIENT_URL}",
+        "--suggested-fee-recipient=0xDeb5A7ff81d445AC7f86fd7A9d800763C058B494",
+        "--graffiti=Diva",
+        "--web3-signer-url=http://diva:9000",
+      ]
+
+  operator-ui:
+    image: diva/operator-ui:v24.8.0
+    platform: linux/amd64
+    container_name: operator-ui
+    restart: unless-stopped
+    ports:
+      - "80:80"
+
+  execution:
+    image: ethereum/client-go:v1.13.14
+    container_name: execution
+    restart: unless-stopped
+    stop_grace_period: 1m
+    command:
+      [
+        "--holesky",
+        "--http",
+        "--http.api=eth,net,engine,web3",
+        "--http.addr=0.0.0.0",
+        "--ws",
+        "--ws.api=eth,net,engine,web3",
+        "--ws.addr=0.0.0.0",
+        "--ws.origins=*",
+        "--authrpc.addr=0.0.0.0",
+        "--authrpc.port=8551",
+        "--authrpc.vhosts=*",
+        "--authrpc.jwtsecret=/opt/config/jwt",
+      ]
+    volumes:
+      - "${DIVA_DATA_FOLDER:-.}/execution:/root/.ethereum"
+      - "${DIVA_DATA_FOLDER:-.}/execution/config:/opt/config"
+    ports:
+      - "30303:30303/tcp"
+      - "30303:30303/udp"
+
+  beacon:
+    image: sigp/lighthouse:v5.3.0
+    user: root
+    container_name: beacon
+    restart: unless-stopped
+    depends_on:
+      - execution
+    command:
+      [
+        "lighthouse",
+        "bn",
+        "--network=holesky",
+        "--http",
+        "--http-address=0.0.0.0",
+        "--http-port=5052",
+        "--metrics",
+        "--metrics-address=0.0.0.0",
+        "--metrics-port=5054",
+        "--execution-endpoint=http://execution:8551",
+        "--execution-jwt=/opt/config/jwt",
+        "--checkpoint-sync-url=https://checkpoint-sync.holesky.ethpandaops.io/",
+        "--enr-udp-port=33000",
+        "--enr-tcp-port=33000",
+        "--port=33000",
+        "--datadir=/data/lighthouse/beacon-data",
+      ]
+    volumes:
+      - "${DIVA_DATA_FOLDER:-.}/beacon/lighthouse:/data/lighthouse/beacon-data"
+      - "${DIVA_DATA_FOLDER:-.}/execution/config:/opt/config"
+    ports:
+      - "33000:33000/tcp"
+      - "33000:33000/udp"
+      - "5052:5052"
+    healthcheck:
+      test: "[ -d /data/lighthouse/beacon-data/beacon/network ] && exit 0"
+      interval: 1s
+      timeout: 1s
+      retries: 300
+      start_period: 5s
+
+  prometheus:
+    image: prom/prometheus:v2.50.1
+    user: root
+    container_name: prometheus
+    hostname: prometheus
+    restart: unless-stopped
+    command: --config.file=/etc/config/prometheus.yml
+    volumes:
+      - ${DIVA_DATA_FOLDER:-.}/.docker/prometheus/config/prometheus.yml:/etc/config/prometheus.yml
+      - ${DIVA_DATA_FOLDER:-.}/prometheus/data:/prometheus
+  
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    container_name: node-exporter
+    restart: always
+
+  vector:
+    image: timberio/vector:nightly-2024-08-21-alpine
+    platform: linux/amd64
+    container_name: vector
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./.docker/vector/config/vector.toml:/etc/vector/vector.toml
+    environment:
+      - USERNAME=${TESTNET_USERNAME}
+    command: ["--config", "/etc/vector/vector.toml"]
+
+  grafana:
+    image: grafana/grafana:10.2.5
+    user: root
+    container_name: grafana
+    profiles:
+      - metrics
+    hostname: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ${DIVA_DATA_FOLDER:-.}/.docker/grafana/config:/etc/grafana/provisioning
+      - ${DIVA_DATA_FOLDER:-.}/grafana/data:/var/lib/grafana
+      - ${DIVA_DATA_FOLDER:-.}/.docker/grafana/config/grafana.ini:/etc/grafana/grafana.ini
