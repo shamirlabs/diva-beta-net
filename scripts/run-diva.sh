@@ -3,13 +3,15 @@ cd $(dirname -- "$0")
 
 exec_path=$1
 
-HEIGHT=15
+HEIGHT=16
 WIDTH=40
 TITLE="Install Diva"
 
 MIN_MEMORY_MB=8192  # 8 GB
 MIN_DISK_SPACE_GB=750  # 750 GB
 MIN_CPU_CORES=4  # 4 CPU cores
+rungrafana=false
+runclients=false
 
 if [[ ! -x "$(command -v docker)" ]]; then
     # Docker is not installed
@@ -51,17 +53,15 @@ exitcode=$?;
 
 if [ $exitcode -eq 1 ];
 then
-
     MENU="Type the IP and PORT of your execution client websocket RPC\n"
     if [ -f .env ]; then
-        current_url=$(grep -E '^EXECUTION_CLIENT_URL=' .env | cut -d '=' -f2)
+        current_url=$(grep -E '^EXECUTION_CLIENT_URL=' .env | cut -d '=' -f2 | cut -d ' ' -f1)
         if ! [ -z "$current_url" ]; then
             MENU="Type the IP and PORT of your execution client websocket RPC\n\nCurrent configuration: $current_url \n"
         fi
     fi
     WARN="Example: ws://HOST_IP:8546 for geth"
 
-    #TODO: validar WS:// ws:// son los primeros char.
     while true
     do
         execution_client_url=$(dialog --clear \
@@ -88,7 +88,7 @@ then
     MENU="Type the IP and PORT of your consensus client REST API\n"
     WARN="Example: http://HOST_IP:5052 for Lighthouse"
     if [ -f .env ]; then
-        current_url=$(grep -E '^CONSENSUS_CLIENT_URL=' .env | cut -d '=' -f2)
+        current_url=$(grep -E '^CONSENSUS_CLIENT_URL=' .env | cut -d '=' -f2 | cut -d ' ' -f1)
         if ! [ -z "$current_url" ]; then
             MENU="Type the IP and PORT of your consensus client REST API\n\nCurrent configuration: $current_url \n"
         fi
@@ -140,20 +140,26 @@ else
         exit 1
     fi
 
-    
+    runclients=true
     dialog --title "$TITLE" --yesno "Do you want to run a Grafana to monitor your node?" 0 0
     exitcode=$?;
-    if [ $exitcode -ne 1 ];
-    then
-        sed -i.bak -e "s/^COMPOSE_PROFILES *=.*/COMPOSE_PROFILES=clients,metrics,telemetry/" .env
+    if [ $exitcode -ne 1 ]; then
+        rungrafana=true
         envsubst < "./prometheus/config/prometheus_template.yaml" > "./prometheus/config/prometheus.yaml"
-    else
-        sed -i.bak -e "s/^COMPOSE_PROFILES *=.*/COMPOSE_PROFILES=clients,telemetry/" .env
     fi
-
 
     sed -i.bak -e "s,^EXECUTION_CLIENT_URL *=.*,EXECUTION_CLIENT_URL=ws://execution:8546," .env
     sed -i.bak -e "s,^CONSENSUS_CLIENT_URL *=.*,CONSENSUS_CLIENT_URL=http://beacon:5052," .env
+fi
+
+if [[ "$runclients" == "true" && "$rungrafana" == "true" ]]; then
+    sed -i.bak -e "s/^COMPOSE_PROFILES *=.*/COMPOSE_PROFILES=metrics,clients/" .env
+elif [[ "$runclients" == "false" && "$rungrafana" == "true" ]]; then
+    sed -i.bak -e "s/^COMPOSE_PROFILES *=.*/COMPOSE_PROFILES=metrics/" .env
+elif [[ "$runclients" == "true" && "$rungrafana" == "false" ]]; then
+    sed -i.bak -e "s/^COMPOSE_PROFILES *=.*/COMPOSE_PROFILES=clients/" .env
+elif [[ "$runclients" == "false" && "$rungrafana" == "false" ]]; then
+    sed -i.bak -e "s/^COMPOSE_PROFILES *=.*/COMPOSE_PROFILES=/" .env
 fi
 
 current_pw=$(grep -E '^DIVA_API_KEY=' .env | cut -d '=' -f2 | cut -d ' ' -f1)
@@ -204,8 +210,7 @@ if [ "$current_username" == "username-operatoraddress" ]; then
 else
     dialog --title "$TITLE" --yesno "Do you want to edit your current username?" 0 0
     exitcode=$?;
-    if [ $exitcode -ne 1 ];
-    then
+    if [ $exitcode -ne 1 ]; then
         change_username=true        
     fi
     clear

@@ -22,9 +22,6 @@ services:
     ports:
       - "5050:5050"
       - "30000:30000"
-    depends_on:
-      beacon:
-        condition: service_healthy
 
   validator:
     image: statusim/nimbus-validator-client:multiarch-v24.7.0
@@ -77,6 +74,8 @@ services:
     ports:
       - "30303:30303/tcp"
       - "30303:30303/udp"
+    profiles:
+      - clients
 
   beacon:
     image: sigp/lighthouse:v5.3.0
@@ -117,6 +116,8 @@ services:
       timeout: 1s
       retries: 300
       start_period: 5s
+    profiles:
+      - clients
 
   prometheus:
     image: prom/prometheus:v2.50.1
