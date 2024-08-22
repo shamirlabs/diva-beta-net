@@ -107,7 +107,7 @@ then
         fi
 
         status_code=$(curl --write-out '%{http_code}' --silent --output /dev/null $consensus_client_url/eth/v1/node/health)
-        if [[ "$status_code" -eq 200 ]] ; then
+        if [[ "$status_code" -lt 300 ]] ; then
             sed -i.bak -e "s,^CONSENSUS_CLIENT_URL *=.*,CONSENSUS_CLIENT_URL=${consensus_client_url}," .env
             break
         else
