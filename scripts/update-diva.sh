@@ -19,8 +19,8 @@ cp .env diva_backup/bkp_$UPDATE_TIME/.env
 git reset --hard origin/main
 git pull
 
-cp -r diva_backup/bkp_$UPDATE_TIME/.diva .diva
-cp diva_backup/bkp_$UPDATE_TIME/.env .env
+sudo cp -r diva_backup/bkp_$UPDATE_TIME/.diva/* .diva
+sudo cp diva_backup/bkp_$UPDATE_TIME/.env .env
 
 docker compose pull
 docker compose up -d
