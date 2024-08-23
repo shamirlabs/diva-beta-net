@@ -145,12 +145,12 @@ else
     exitcode=$?;
     if [ $exitcode -ne 1 ]; then
         rungrafana=true
-        envsubst < "./prometheus/config/prometheus_template.yaml" > "./prometheus/config/prometheus.yaml"
     fi
 
     sed -i.bak -e "s,^EXECUTION_CLIENT_URL *=.*,EXECUTION_CLIENT_URL=ws://execution:8546," .env
     sed -i.bak -e "s,^CONSENSUS_CLIENT_URL *=.*,CONSENSUS_CLIENT_URL=http://beacon:5052," .env
 fi
+
 
 if [[ "$runclients" == "true" && "$rungrafana" == "true" ]]; then
     sed -i.bak -e "s/^COMPOSE_PROFILES *=.*/COMPOSE_PROFILES=metrics,clients/" .env
@@ -243,6 +243,7 @@ if [ "$change_username" == true ]; then
     clear
     done
 fi
+set -a && source .env && set +a && envsubst < "./.docker/prometheus/config/prometheus.yml.template" > "./.docker/prometheus/config/prometheus.yml"
 
 export $(grep -v '^#' ./.env | sed 's/ *#.*//g' | xargs)
 
