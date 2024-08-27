@@ -23,4 +23,4 @@ sudo cp -r diva_backup/bkp_$UPDATE_TIME/.diva/* .diva
 sudo cp diva_backup/bkp_$UPDATE_TIME/.env .env
 
 docker compose pull
-docker compose up -d
+./scripts/run-diva.sh $exec_path

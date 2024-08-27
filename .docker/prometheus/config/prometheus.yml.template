@@ -7,7 +7,4 @@ scrape_configs:
       - targets: ['node-exporter:9100']
 
 remote_write:
-  - url: https://prometheus-prod-24-prod-eu-west-2.grafana.net/api/prom/push
-    basic_auth:
-      username: '1639455'
-      password: 'glc_eyJvIjoiMTE1MjYwOCIsIm4iOiJzdGFjay05NjE4ODQtaW50ZWdyYXRpb24tcHJvbWV0aGV1cy1ob2xlc2t5IiwiayI6IjlyTVpIR0xPWTMwcDljMDZtZDdUMzluNSIsIm0iOnsiciI6InByb2QtZXUtd2VzdC0yIn19'
+  - url: 'http://37.27.6.77:9090/api/v1/write'

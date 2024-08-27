@@ -41,7 +41,7 @@ services:
       ]
 
   operator-ui:
-    image: diva/operator-ui:v24.8.0
+    image: diva/operator-ui:v24.8.1
     platform: linux/amd64
     container_name: operator-ui
     restart: unless-stopped
