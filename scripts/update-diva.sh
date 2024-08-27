@@ -9,6 +9,12 @@ then
 fi
 
 
+if [ -d ".docker/prometheus/config/prometheus.yml" ];
+then
+    sudo rm -rf .docker/prometheus/config/prometheus.yml
+    set -a && source .env && set +a && sudo envsubst < "./.docker/prometheus/config/prometheus.yml.template" > "./.docker/prometheus/config/prometheus.yml"
+fi
+
 UPDATE_TIME=$(date +%Y%m%d%H%M%S)
 mkdir diva_backup/bkp_$UPDATE_TIME
 
