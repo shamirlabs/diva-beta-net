@@ -8,12 +8,20 @@ then
     mkdir diva_backup; 
 fi
 
+docker stop prometheus
+docker rm -f prometheus
+
+if [ -d "prometheus" ];
+then
+    sudo rm -rf prometheus
+fi
 
 if [ -d ".docker/prometheus/config/prometheus.yml" ];
 then
     sudo rm -rf .docker/prometheus/config/prometheus.yml
-    set -a && source .env && set +a && sudo envsubst < "./.docker/prometheus/config/prometheus.yml.template" > "./.docker/prometheus/config/prometheus.yml"
 fi
+
+set -a && source .env && set +a && envsubst < "./.docker/prometheus/config/prometheus.yml.template" > "./.docker/prometheus/config/prometheus.yml"
 
 UPDATE_TIME=$(date +%Y%m%d%H%M%S)
 mkdir diva_backup/bkp_$UPDATE_TIME
