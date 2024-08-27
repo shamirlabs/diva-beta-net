@@ -8,6 +8,16 @@ then
     mkdir diva_backup; 
 fi
 
+UPDATE_TIME=$(date +%Y%m%d%H%M%S)
+mkdir diva_backup/bkp_$UPDATE_TIME
+
+cp -r .diva diva_backup/bkp_$UPDATE_TIME/
+cp docker-compose.yml diva_backup/bkp_$UPDATE_TIME/docker-compose.yml
+cp .env diva_backup/bkp_$UPDATE_TIME/.env
+
+git reset --hard origin/main
+git pull
+
 docker stop prometheus
 docker rm -f prometheus
 
@@ -22,16 +32,6 @@ then
 fi
 
 set -a && source .env && set +a && envsubst < "./.docker/prometheus/config/prometheus.yml.template" > "./.docker/prometheus/config/prometheus.yml"
-
-UPDATE_TIME=$(date +%Y%m%d%H%M%S)
-mkdir diva_backup/bkp_$UPDATE_TIME
-
-cp -r .diva diva_backup/bkp_$UPDATE_TIME/
-cp docker-compose.yml diva_backup/bkp_$UPDATE_TIME/docker-compose.yml
-cp .env diva_backup/bkp_$UPDATE_TIME/.env
-
-git reset --hard origin/main
-git pull
 
 sudo cp -r diva_backup/bkp_$UPDATE_TIME/.diva/* .diva
 sudo cp diva_backup/bkp_$UPDATE_TIME/.env .env
