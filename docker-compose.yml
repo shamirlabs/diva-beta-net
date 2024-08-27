@@ -22,6 +22,7 @@ services:
     ports:
       - "5050:5050"
       - "30000:30000"
+    mem_limit: 8g
 
   validator:
     image: statusim/nimbus-validator-client:multiarch-v24.7.0
