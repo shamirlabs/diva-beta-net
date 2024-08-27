@@ -47,7 +47,7 @@ services:
     container_name: operator-ui
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "${OPERATOR_UI_PORT:-80}:80"
 
   execution:
     image: ethereum/client-go:v1.13.14
