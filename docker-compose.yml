@@ -67,7 +67,7 @@ services:
         "--authrpc.addr=0.0.0.0",
         "--authrpc.port=8551",
         "--authrpc.vhosts=*",
-        "--authrpc.jwtsecret=/opt/config/jwt",
+        "--authrpc.jwtsecret=/opt/config/jwt"
       ]
     volumes:
       - "${DIVA_DATA_FOLDER:-.}/execution:/root/.ethereum"
@@ -103,6 +103,7 @@ services:
         "--enr-tcp-port=33000",
         "--port=33000",
         "--datadir=/data/lighthouse/beacon-data",
+        "--http-allow-origin=*",
       ]
     volumes:
       - "${DIVA_DATA_FOLDER:-.}/beacon/lighthouse:/data/lighthouse/beacon-data"
