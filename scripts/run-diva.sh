@@ -5,7 +5,7 @@ exec_path=$1
 
 HEIGHT=16
 WIDTH=40
-TITLE="Install Diva"
+TITLE="Run Diva"
 
 MIN_MEMORY_MB=8192  # 8 GB
 MIN_DISK_SPACE_GB=750  # 750 GB
