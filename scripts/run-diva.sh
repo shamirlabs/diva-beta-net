@@ -13,6 +13,11 @@ MIN_CPU_CORES=4  # 4 CPU cores
 rungrafana=false
 runclients=false
 
+if ! command -v jq &> /dev/null; then
+  echo "Installing jq..."
+  sudo apt-get update && sudo apt-get install -y jq
+fi
+
 if [[ ! -x "$(command -v docker)" ]]; then
     # Docker is not installed
     dialog --title "$TITLE" --yesno "We need to install docker in your machine first. After docker is installed, you will need to close your SSH session, login and execute the script again.\n\nDo you want to continue?" 0 0
@@ -30,7 +35,6 @@ if [[ ! -x "$(command -v docker)" ]]; then
 fi
 
 cd $exec_path
-git pull --quiet
 
 if [[ -f ".env" ]]; then
     # .env already exists
@@ -38,7 +42,10 @@ if [[ -f ".env" ]]; then
     exitcode=$?;
     if [ $exitcode -ne 1 ];
     then
+        docker compose down
         docker compose up -d
+        sleep 5        
+        ./scripts/migrate-dkg.sh $exec_path
         exit 1
     fi
 else
@@ -247,4 +254,7 @@ set -a && source .env && set +a && envsubst < "./.docker/prometheus/config/prome
 
 export $(grep -v '^#' ./.env | sed 's/ *#.*//g' | xargs)
 
+docker compose down
 docker compose up -d
+sleep 5        
+./scripts/migrate-dkg.sh $exec_path

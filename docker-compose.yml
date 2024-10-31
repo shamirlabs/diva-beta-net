@@ -1,7 +1,7 @@
 services:
 
   diva:
-    image: diva/diva:v24.10.0
+    image: diva/diva:v24.10.1
     platform: linux/amd64
     container_name: diva
     hostname: diva
@@ -15,6 +15,7 @@ services:
       - '--execution-client-url=${EXECUTION_CLIENT_URL}'
       - '--consensus-client-url=${CONSENSUS_CLIENT_URL}'
       - '--chain=holesky'
+      - '--enable-participant'
     environment:
       - DIVA_VAULT_PASSWORD=${DIVA_VAULT_PASSWORD}
     volumes:
@@ -25,7 +26,7 @@ services:
     mem_limit: 8g
 
   validator:
-    image: statusim/nimbus-validator-client:multiarch-v24.7.0
+    image: statusim/nimbus-validator-client:multiarch-v24.10.0
     platform: linux/amd64
     container_name: validator
     hostname: validator
@@ -42,7 +43,7 @@ services:
       ]
 
   operator-ui:
-    image: diva/operator-ui:v24.8.1
+    image: diva/operator-ui:v24.10.1
     platform: linux/amd64
     container_name: operator-ui
     restart: unless-stopped

@@ -15,8 +15,8 @@ cp -r .diva diva_backup/bkp_$UPDATE_TIME/
 cp docker-compose.yml diva_backup/bkp_$UPDATE_TIME/docker-compose.yml
 cp .env diva_backup/bkp_$UPDATE_TIME/.env
 
+git fetch
 git reset --hard origin/main
-git pull
 
 docker stop prometheus
 docker rm -f prometheus
@@ -37,4 +37,19 @@ sudo cp -r diva_backup/bkp_$UPDATE_TIME/.diva/* .diva
 sudo cp diva_backup/bkp_$UPDATE_TIME/.env .env
 
 docker compose pull
-./scripts/run-diva.sh $exec_path
+
+if [[ -f ".env" ]]; then
+    # .env already exists
+    dialog --title "$TITLE" --yesno "Do you want to run the update with the exsiting configuration?" 0 0
+    exitcode=$?;
+    if [ $exitcode -ne 1 ];
+    then
+        docker compose down
+        docker compose up -d
+        sleep 5        
+        ./scripts/migrate-dkg.sh $exec_path        
+        exit 1
+    fi
+else
+    ./scripts/run-diva.sh $exec_path
+fi
