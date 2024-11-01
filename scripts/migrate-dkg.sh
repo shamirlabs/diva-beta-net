@@ -3,6 +3,11 @@
 exec_path=$1
 cd $exec_path
 
+if ! command -v jq &> /dev/null; then
+  echo "Installing jq..."
+  sudo apt-get update && sudo apt-get install -y jq
+fi
+
 set -a && source .env && set +a
 response=$(curl -s -X 'GET' \
   'http://localhost:30000/api/v2/participant/dkgs' \
