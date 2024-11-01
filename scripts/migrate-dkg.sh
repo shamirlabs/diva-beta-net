@@ -9,10 +9,17 @@ if ! command -v jq &> /dev/null; then
 fi
 
 set -a && source .env && set +a
-response=$(curl -s -X 'GET' \
-  'http://localhost:30000/api/v2/participant/dkgs' \
-  -H 'accept: application/json' \
-  -H "Authorization: Bearer $DIVA_API_KEY")
+response=""
+while [ -z "$response" ]; do
+  response=$(curl -s -X 'GET' \
+    'http://localhost:30000/api/v2/participant/dkgs' \
+    -H 'accept: application/json' \
+    -H "Authorization: Bearer $DIVA_API_KEY")
+  
+  if [ -z "$response" ]; then
+    sleep 5
+  fi
+done
 
 old_dkgs=$(echo "$response" | jq -r '. | if .error then 1 else 0 end')
 
