@@ -7,8 +7,8 @@ if ! command -v jq &> /dev/null; then
   echo "Installing jq..."
   sudo apt-get update && sudo apt-get install -y jq
 fi
-
 set -a && source .env && set +a
+docker compose up -d
 response=""
 while [ -z "$response" ]; do
   response=$(curl -s -X 'GET' \
