@@ -2,10 +2,32 @@
   type = "docker_logs"
   include_containers = ["diva"]
 
+[transforms.filter_errors]
+  type = "filter"
+  inputs = ["diva_logs"]
+  condition = 'contains!(.message, "Error grabbing logs:") == false'
+
+[transforms.deadletter_filter]
+  type = "filter"
+  inputs = ["filter_errors"]
+  condition = 'contains!(.message, "DeadLetter")'
+
+[transforms.throttle_deadletter]
+  type = "throttle"
+  inputs = ["deadletter_filter"]
+  threshold = 1
+  window_secs = 5
+
+[transforms.non_deadletter]
+  type = "filter"
+  inputs = ["filter_errors"]
+  condition = '''
+    contains!(.message, "DeadLetter") == false && contains!(.message, "slot already initialized") == false
+  '''
+
 [sinks.loki]
   type = "loki"
-  inputs = ["diva_logs"]
-  endpoint = "https://1038435:glc_eyJvIjoiMTI2MjM1MyIsIm4iOiJzdGFjay0xMDgwNjU2LWludGVncmF0aW9uLWJldGE0IiwiayI6IkNCaUZ3OGgwNUlROGc4ME4zTDdlelY2OCIsIm0iOnsiciI6InByb2QtdXMtZWFzdC0wIn19@logs-prod-006.grafana.net"
-
+  endpoint = "https://1047507:glc_eyJvIjoiMTI3MTA5OSIsIm4iOiJzdGFjay0xMDg5NzI4LWludGVncmF0aW9uLWhvbGVza3kiLCJrIjoibHhMUkw1bTU0NDU3QzkyWDBHVW9KVng0IiwibSI6eyJyIjoicHJvZC1ldS1ub3J0aC0wIn19@logs-prod-025.grafana.net"
+  inputs = ["throttle_deadletter", "non_deadletter"]
   labels = {app="diva", job = "${USERNAME}"}
   encoding.codec = "json"
