@@ -11,6 +11,8 @@ fi
 set -a && source .env && set +a
 docker compose up -d
 
+echo "Node needs to be restarted and synced, the proccess may take a while..."
+
 is_synced(){
   is_syncing=true
   while [ "$is_syncing" != "false" ]; do
@@ -31,7 +33,7 @@ is_synced(){
       return 0
     else
       echo "Node is starting..."
-      sleep 30
+      sleep 5
     fi
   done
   return 1
