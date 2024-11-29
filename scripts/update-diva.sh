@@ -10,7 +10,7 @@ fi
 
 UPDATE_TIME=$(date +%Y%m%d%H%M%S)
 mkdir diva_backup/bkp_$UPDATE_TIME
-
+docker compose down
 cp -r .diva diva_backup/bkp_$UPDATE_TIME/
 cp docker-compose.yml diva_backup/bkp_$UPDATE_TIME/docker-compose.yml
 cp .env diva_backup/bkp_$UPDATE_TIME/.env
@@ -44,7 +44,6 @@ if [[ -f ".env" ]]; then
     exitcode=$?;
     if [ $exitcode -ne 1 ];
     then
-        docker compose down
         docker compose up -d
         sleep 5        
         ./scripts/migrate-dkg.sh $exec_path        
