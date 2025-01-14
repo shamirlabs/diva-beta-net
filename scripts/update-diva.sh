@@ -45,8 +45,6 @@ if [[ -f ".env" ]]; then
     if [ $exitcode -ne 1 ];
     then
         docker compose up -d
-        sleep 5        
-        ./scripts/migrate-dkg.sh $exec_path        
         exit 1
     fi
 else
