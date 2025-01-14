@@ -256,5 +256,3 @@ export $(grep -v '^#' ./.env | sed 's/ *#.*//g' | xargs)
 
 docker compose down
 docker compose up -d
-sleep 5        
-./scripts/migrate-dkg.sh $exec_path
